@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B132B">
+<title>Kalkulator Kesehatan (BMI, BMR &amp; TDEE)</title>
+<style>
+:root{--bg:#0B132B;--ink:#E8F1FF;--muted:#9FB3D9;--glass:rgba(255,255,255,.06);--line:rgba(255,255,255,.12);
+  --c1:#00F2FE;--c2:#4FACFE;color-scheme:dark;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{height:100%}
+body{margin:0;min-height:100%;color:var(--ink);font-family:"Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;line-height:1.5;-webkit-text-size-adjust:100%;
+  background:radial-gradient(700px 380px at 100% -5%,rgba(0,242,254,.18),transparent 60%),radial-gradient(600px 400px at -10% 40%,rgba(79,172,254,.16),transparent 60%),var(--bg);background-attachment:fixed}
+.wrap{max-width:600px;margin:0 auto;padding:22px 16px 48px}
+
+.hero{display:flex;align-items:center;gap:8px;padding:22px 18px 22px 22px;margin-bottom:16px;border-radius:28px;color:#06213a;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 18px 40px -18px rgba(0,242,254,.7)}
+.hero::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.22)}
+.hero .txt{position:relative;z-index:1;flex:1}
+.hero h1{font-size:1.5rem;line-height:1.15;margin:0 0 8px;font-weight:800}
+.hero p{margin:0;font-size:.9rem;font-weight:500;color:#0a2e4d}
+.hero svg{flex:none;position:relative;z-index:1;width:104px;height:104px;animation:bob 3.2s ease-in-out infinite;filter:drop-shadow(0 8px 10px rgba(0,30,60,.3))}
+@keyframes bob{50%{transform:translateY(-6px)}}
+
+.card{background:var(--glass);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 14px 34px -18px rgba(0,0,0,.7);margin-bottom:14px}
+label,.lbl{display:block;font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+.field{margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input[type=text],input[type=number],select{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;outline:none;transition:all .3s ease;appearance:none;-webkit-appearance:none}
+input::placeholder{color:#6F84B0}
+input:focus,select:focus{border-color:var(--c1);box-shadow:0 0 0 3px rgba(0,242,254,.2)}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat;padding-right:36px}
+select option{background:#13204A;color:var(--ink)}
+input:hover,select:hover{border-color:rgba(0,242,254,.5)}
+
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.opt{position:relative}
+.opt input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+.opt span{display:block;height:100%;padding:14px;border:1.5px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(255,255,255,.05);font-size:.9rem;transition:all .3s ease}
+.opt b{display:block;font-size:.95rem}
+.opt small{color:var(--muted);font-size:.78rem}
+.opt:hover span{border-color:rgba(0,242,254,.65);transform:translateY(-2px)}
+.opt input:checked+span{background:linear-gradient(135deg,rgba(0,242,254,.24),rgba(79,172,254,.24));border-color:var(--c1);box-shadow:0 0 20px rgba(0,242,254,.45)}
+.opt input:focus-visible+span,button:focus-visible{outline:3px solid var(--c1);outline-offset:2px}
+
+button.go{width:100%;font:inherit;font-weight:800;font-size:1.05rem;border:0;border-radius:16px;padding:15px;cursor:pointer;color:#06213a;
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 12px 24px -12px rgba(0,242,254,.9);transition:all .3s ease}
+button.go:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(0,242,254,1)}
+button.go:active{transform:scale(.98)}
+.err{color:#FF8A8A;font-size:.88rem;margin:10px 2px 0;min-height:1.2em}
+
+#hasil{display:none}
+#hasil.show{display:block}
+.ai{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.ai svg{flex:none;width:48px;height:48px}
+.bub{background:rgba(255,255,255,.08);border-radius:4px 18px 18px 18px;padding:10px 14px;font-size:.92rem}
+.bub b{display:block;font-size:.8rem;color:var(--c1);margin-bottom:2px}
+.metric{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:20px;padding:16px;transition:all .3s ease}
+.metric:hover{transform:translateY(-3px);border-color:rgba(0,242,254,.6);box-shadow:0 0 18px rgba(0,242,254,.25)}
+.metric .ic{font-size:1.3rem}
+.ttl{font-size:.8rem;color:var(--muted);font-weight:600;margin-top:4px}
+.val{font-size:2rem;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:#fff}
+.sub{font-size:.75rem;color:var(--muted)}
+.badge{display:inline-block;font-weight:800;font-size:.85rem;padding:5px 12px;border-radius:99px;color:#08202a;margin-top:6px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.gauge{position:relative;margin:18px 0 6px}
+.bar{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px}
+.bar div{height:100%}
+.pin{position:absolute;top:-7px;left:0;width:4px;height:26px;border-radius:3px;background:#fff;transform:translateX(-50%);box-shadow:0 0 0 3px var(--bg);transition:left .9s cubic-bezier(.2,.8,.2,1)}
+.ticks{position:relative;height:16px;font-size:.72rem;color:var(--muted);margin-top:8px}
+.ticks span{position:absolute;transform:translateX(-50%)}
+
+h2{font-size:.95rem;margin:20px 0 10px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+.tabs button{font:inherit;font-size:.82rem;font-weight:700;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:10px 4px;cursor:pointer;transition:all .3s ease}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected=true]{color:var(--c1);border-bottom-color:var(--c1)}
+ul.rec{list-style:none;margin:14px 0 0;padding:0}
+ul.rec li{position:relative;padding:0 0 10px 22px;font-size:.93rem}
+ul.rec li::before{content:"";position:absolute;left:2px;top:.55em;width:8px;height:8px;border-radius:50%;background:var(--tone,var(--c1))}
+.note{font-size:.78rem;color:#7F94BD;text-align:center;margin:14px 0 0}
+@media (prefers-reduced-motion:reduce){.hero svg{animation:none}.pin{transition:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="bot" viewBox="0 0 100 100">
+<path d="M18 100Q18 70 50 68Q82 70 82 100Z" fill="#fff" stroke="#0aa6e0" stroke-width="3"/><line x1="50" y1="16" x2="50" y2="8" stroke="#0aa6e0" stroke-width="3"/><circle cx="50" cy="7" r="5" fill="#ff5a7a"/>
+<circle cx="23" cy="43" r="6" fill="#0aa6e0"/><circle cx="77" cy="43" r="6" fill="#0aa6e0"/><circle cx="50" cy="42" r="27" fill="#fff" stroke="#0aa6e0" stroke-width="3"/>
+<rect x="30" y="31" width="40" height="24" rx="12" fill="#0f3d4a"/><circle cx="41" cy="42" r="4.5" fill="#5ef2d0"/><circle cx="59" cy="42" r="4.5" fill="#5ef2d0"/>
+<path d="M44 49Q50 54 56 49" stroke="#5ef2d0" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M34 69Q29 87 40 87" stroke="#0f3d4a" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="41" cy="87" r="3.5" fill="#ffb020"/><rect x="58" y="76" width="8" height="16" rx="2" fill="#ff5a5f"/><rect x="54" y="80" width="16" height="8" rx="2" fill="#ff5a5f"/></symbol></svg>
+
+<main class="wrap">
+  <header class="hero">
+    <div class="txt">
+      <h1>Kalkulator Kesehatan</h1>
+      <p>Halo, saya Asisten Sehat! Hitung BMI, BMR, dan kalori harian Anda, lalu dapatkan saran yang pas untuk tubuh Anda.</p>
+    </div>
+    <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bot"/></svg>
+  </header>
+
+  <section class="card" aria-label="Data diri">
+    <div class="field"><label for="nama">Nama</label><input id="nama" type="text" autocomplete="given-name" placeholder="Nama Anda"></div>
+    <div class="row field">
+      <div><label for="usia">Usia (tahun)</label><input id="usia" type="number" inputmode="numeric" min="1" max="120" placeholder="mis. 25"></div>
+      <div><label for="jk">Jenis kelamin</label><select id="jk"><option value="p">Pria</option><option value="w">Wanita</option></select></div>
+    </div>
+    <div class="row field">
+      <div><label for="berat">Berat badan (kg)</label><input id="berat" type="number" inputmode="decimal" min="1" step="0.1" placeholder="mis. 65"></div>
+      <div><label for="tinggi">Tinggi badan (cm)</label><input id="tinggi" type="number" inputmode="decimal" min="1" step="0.1" placeholder="mis. 170"></div>
+    </div>
+    <span class="lbl">Tingkat aktivitas fisik</span>
+    <div class="acts">
+      <label class="opt"><input type="radio" name="akt" value="0" checked><span>🛋️ <b>Tidak aktif</b><small>Jarang olahraga</small></span></label>
+      <label class="opt"><input type="radio" name="akt" value="1"><span>🏃 <b>Ringan</b><small>1–3 hari/minggu</small></span></label>
+      <label class="opt"><input type="radio" name="akt" value="2"><span>🏋️ <b>Sedang</b><small>3–5 hari/minggu</small></span></label>
+      <label class="opt"><input type="radio" name="akt" value="3"><span>🔥 <b>Berat</b><small>6–7 hari/minggu</small></span></label>
+    </div>
+    <button class="go" id="hitung" type="button">Hitung sekarang</button>
+    <p class="err" id="err" role="alert"></p>
+  </section>
+
+  <div id="hasil" aria-live="polite">
+    <section class="card">
+      <div class="ai"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#bot"/></svg><div class="bub"><b id="halo"></b><span id="say"></span></div></div>
+      <div class="metric">
+        <div class="ic">⚖️</div><div class="ttl">Indeks Massa Tubuh (BMI)</div>
+        <div class="val" id="bmiVal">0</div><span class="badge" id="badge"></span>
+        <div class="gauge">
+          <div class="bar"><div style="width:14%;background:#4FACFE"></div><div style="width:26%;background:#2EE59D"></div><div style="width:20%;background:#FFC94A"></div><div style="width:40%;background:#FF6B6B"></div></div>
+          <div class="pin" id="pin"></div>
+          <div class="ticks"><span style="left:14%">18,5</span><span style="left:40%">25</span><span style="left:60%">30</span></div>
+        </div>
+      </div>
+      <div class="grid">
+        <div class="metric"><div class="ic">🔥</div><div class="ttl">BMR</div><div class="val" id="bmr">0</div><div class="sub">kalori/hari saat istirahat</div></div>
+        <div class="metric"><div class="ic">⚡</div><div class="ttl">TDEE</div><div class="val" id="tdee">0</div><div class="sub" id="tdeeSub">kalori/hari</div></div>
+      </div>
+      <h2>Saran untuk Anda</h2>
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" data-k="aktivitas">🏃 Aktivitas</button>
+        <button role="tab" aria-selected="false" data-k="makanan">🥗 Pola makan</button>
+        <button role="tab" aria-selected="false" data-k="pola">😴 Kebiasaan</button>
+      </div>
+      <ul class="rec" id="rec" role="tabpanel"></ul>
+      <p class="note">BMI adalah indikator umum dan bukan diagnosis kesehatan.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+  var REC={
+    kurus:{aktivitas:["Latihan kekuatan ringan hingga sedang secara bertahap.","Jalan santai, bersepeda, atau aktivitas fisik ringan.","Berikan waktu istirahat yang cukup agar tubuh dapat pulih."],makanan:["Konsumsi makanan bergizi dan seimbang.","Utamakan sumber protein, karbohidrat, sayur, dan buah.","Jangan melewatkan waktu makan dan cukupi kebutuhan cairan."],pola:["Makan secara teratur.","Tidur cukup dan teratur.","Tingkatkan aktivitas secara bertahap sesuai kemampuan tubuh."]},
+    normal:{aktivitas:["Lakukan olahraga secara rutin.","Jalan kaki, bersepeda, berenang, atau olahraga yang disukai.","Tambahkan latihan kekuatan beberapa kali dalam seminggu."],makanan:["Pertahankan pola makan yang beragam dan bergizi seimbang.","Konsumsi sayur, buah, protein, dan sumber karbohidrat secukupnya.","Batasi makanan dan minuman yang tinggi gula, garam, dan lemak."],pola:["Pertahankan aktivitas fisik secara rutin.","Tidur cukup dan teratur.","Seimbangkan waktu belajar, aktivitas, olahraga, dan istirahat."]},
+    gemuk:{aktivitas:["Perbanyak aktivitas fisik ringan hingga sedang.","Jalan kaki, bersepeda, berenang, atau olahraga permainan.","Tingkatkan aktivitas secara bertahap sesuai kemampuan."],makanan:["Konsumsi makanan bergizi seimbang.","Perbanyak sayur dan buah serta sumber protein.","Batasi makanan dan minuman tinggi gula, garam, dan lemak."],pola:["Kurangi terlalu banyak duduk dalam waktu lama.","Lakukan aktivitas fisik secara rutin.","Jaga pola tidur yang cukup dan teratur."]},
+    obes:{aktivitas:["Mulai dari aktivitas ringan seperti berjalan santai.","Tingkatkan durasi dan intensitas aktivitas secara bertahap.","Pilih aktivitas yang nyaman dan dapat dilakukan secara rutin."],makanan:["Fokus pada makanan bergizi dan seimbang.","Perbanyak sayur, buah, protein, dan sumber karbohidrat bergizi.","Batasi makanan dan minuman tinggi gula, garam, dan lemak."],pola:["Kurangi waktu duduk terlalu lama dan lakukan jeda untuk bergerak.","Bangun kebiasaan aktivitas fisik secara perlahan.","Jaga tidur yang cukup dan teratur.","Jika memiliki masalah kesehatan, konsultasikan dengan tenaga kesehatan."]}
+  };
+  var MSG={kurus:"Berat badan Anda di bawah ideal. Fokus pada gizi seimbang dan naikkan aktivitas pelan-pelan.",normal:"Kerja bagus! Berat badan Anda ideal. Pertahankan kebiasaan sehat ini.",gemuk:"Sedikit di atas ideal. Mulai dari langkah kecil yang konsisten, Anda pasti bisa.",obes:"Mulai pelan-pelan dari aktivitas ringan. Konsultasi dengan tenaga kesehatan juga bisa membantu."};
+  var FAKTOR=[1.2,1.375,1.55,1.725], NAMA=["🛋️ Tidak aktif","🏃 Ringan","🏋️ Sedang","🔥 Berat"];
+  var $=function(i){return document.getElementById(i)};
+  var cur=null,tab="aktivitas";
+  function evaluasi(b){
+    if(b<18.5)return{k:"kurus",t:"Kurus (Underweight)",c:"#4FACFE"};
+    if(b<25)return{k:"normal",t:"Normal (Ideal)",c:"#2EE59D"};
+    if(b<30)return{k:"gemuk",t:"Gemuk (Overweight)",c:"#FFC94A"};
+    return{k:"obes",t:"Obesitas",c:"#FF6B6B"};
+  }
+  function fmt(n,d){return n.toLocaleString("id-ID",{minimumFractionDigits:d,maximumFractionDigits:d})}
+  function renderRec(){
+    if(!cur)return;
+    var ul=$("rec");ul.innerHTML="";ul.style.setProperty("--tone",cur.c);
+    REC[cur.k][tab].forEach(function(s){var li=document.createElement("li");li.textContent=s;ul.appendChild(li)});
+  }
+  function hitung(){
+    var nama=$("nama").value.trim()||"Anda";
+    var usia=parseInt($("usia").value,10),berat=parseFloat($("berat").value),tinggi=parseFloat($("tinggi").value);
+    var pria=$("jk").value==="p",akt=parseInt(document.querySelector("input[name=akt]:checked").value,10),err=$("err");
+    if(!(usia>0&&usia<=120)){err.textContent="Masukkan usia antara 1 dan 120 tahun.";return}
+    if(!(berat>0&&berat<=500)){err.textContent="Masukkan berat badan yang valid (dalam kg).";return}
+    if(!(tinggi>=50&&tinggi<=260)){err.textContent="Masukkan tinggi badan antara 50 dan 260 cm.";return}
+    err.textContent="";
+    var m=tinggi/100,bmi=berat/(m*m);
+    var bmr=(10*berat)+(6.25*tinggi)-(5*usia)+(pria?5:-161),tdee=bmr*FAKTOR[akt];
+    cur=evaluasi(bmi);
+    $("halo").textContent="Asisten Sehat untuk "+nama;
+    $("say").textContent=MSG[cur.k];
+    $("bmiVal").textContent=fmt(bmi,2);
+    var bd=$("badge");bd.textContent=cur.t;bd.style.background=cur.c;
+    $("bmr").textContent=fmt(bmr,0);$("tdee").textContent=fmt(tdee,0);
+    $("tdeeSub").textContent="kalori/hari · "+NAMA[akt];
+    var pos=Math.max(0,Math.min(1,(bmi-15)/25))*100;
+    $("pin").style.left="0%";$("hasil").classList.add("show");
+    requestAnimationFrame(function(){requestAnimationFrame(function(){$("pin").style.left=pos+"%"})});
+    renderRec();
+    $("hasil").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  $("hitung").addEventListener("click",hitung);
+  document.querySelectorAll(".tabs button").forEach(function(b){
+    b.addEventListener("click",function(){
+      document.querySelectorAll(".tabs button").forEach(function(x){x.setAttribute("aria-selected","false")});
+      b.setAttribute("aria-selected","true");tab=b.dataset.k;renderRec();
+    });
+  });
+})();
+</script>
+</body>
+</html>
